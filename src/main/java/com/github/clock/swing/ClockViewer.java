@@ -14,7 +14,6 @@ import java.awt.event.WindowEvent;
 import java.awt.geom.Line2D;
 import java.awt.geom.Point2D;
 import java.awt.image.BufferedImage;
-
 import javax.swing.JComponent;
 import javax.swing.JFrame;
 
