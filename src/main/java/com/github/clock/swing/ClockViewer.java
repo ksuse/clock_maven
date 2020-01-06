@@ -53,7 +53,7 @@ public class ClockViewer extends JComponent{
     }
 
     public boolean isDebugMode(){
-        return debugMode;x
+        return debugMode;
     }
 
     public void showClock(){
@@ -121,9 +121,10 @@ public class ClockViewer extends JComponent{
 
         g2.setStroke(new BasicStroke(2));
         g2.setColor(Color.decode(args.getLongHandColor()));
+        g2.setColor(Color.decode(args.getshortHandColor()));
         drawHand(g2, clock.getMinute(), length * 0.7);
         // 長針の位置は，分の位置で表そうとすると，時間×5．
-        // 24時間制のため，12で割った余りを時間とする．
+        // 24時間制のため，12で割った余りを時間と""する．
         g2.setStroke(new BasicStroke(4));
         g2.setColor(Color.BLUE);
         drawHand(g2, hourPosition, length * 0.6);
