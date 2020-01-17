@@ -30,6 +30,7 @@ public class Args {
         return longHandColor;
     }
 
+    // 変更箇所
     @Option(name="-sc", aliases="--short-hand-color", usage="短針の色を指定する。")
     private String shortHandColor = "#ff0000";
 
