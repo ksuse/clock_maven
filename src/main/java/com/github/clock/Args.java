@@ -36,6 +36,7 @@ public class Args {
      public String getShortHandColor(){
             return shortHandColor;
      }
+     
 
     public boolean isRunningMode(){
         return !isShowVersion() && !isShowHelp();

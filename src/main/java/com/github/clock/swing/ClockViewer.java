@@ -129,6 +129,7 @@ public class ClockViewer extends JComponent{
         drawHand(g2, hourPosition, length * 0.6);
     }
 
+
     private void drawHand(Graphics2D g2, int dest, double length){
         // 1分あたり，60度/360度 = PI/30.
         // 12の位置が - PI / 2.
