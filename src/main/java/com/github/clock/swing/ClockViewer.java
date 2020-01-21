@@ -1,5 +1,6 @@
 package com.github.clock.swing;
 
+
 import java.awt.BasicStroke;
 import java.awt.BorderLayout;
 import java.awt.Color;
@@ -115,6 +116,7 @@ public class ClockViewer extends JComponent{
                 hour, minute, second, hourPosition, minute, second
             );
         }
+
 
         g2.translate(center.getX(), center.getY());
         drawHand(g2, clock.getSecond(), length * 0.8);
