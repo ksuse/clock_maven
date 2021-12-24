@@ -6,21 +6,21 @@ import picocli.CommandLine;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
 
-@Command(name="clock", versionProvider=VersionProvider.class, description="Sample project for analog clock")
+@Command(name="clock", versionProvider=VersionProvider.class, description="サンプルプロジェクト（アナログ時計）")
 public class Args {
-    @Option(names= {"-t", "--timezone"}, description="Specifies time zone.  Default is local time.", paramLabel="TIMEZONE")
+    @Option(names= {"-t", "--timezone"}, description="タイムゾーンを指定する．デフォルトはシステムデフォルト．", paramLabel="ZONEID")
     private String timeZone;
 
-    @Option(names={ "-h", "--help"}, description="print this message.")
+    @Option(names={ "-h", "--help"}, description="ヘルプメッセージを表示する")
     private boolean showHelp = false;
 
-    @Option(names={ "-H", "--more-help"}, description="print detail help message.")
+    @Option(names={ "-H", "--more-help"}, description="ヘルプメッセージを表示する（詳細表示）．")
     private boolean showMoreHelp = false;
 
-    @Option(names = {"-v", "--version"}, description="show version and quit.")
+    @Option(names = {"-v", "--version"}, description="バージョンを表示して終了する")
     private boolean showVersion = false;
 
-    @Option(names={"-d", "--debug"}, description="debug mode.")
+    @Option(names={"-d", "--debug"}, description="デバッグモード")
     private boolean debugMode = false;
 
     public boolean isRunningMode(){
