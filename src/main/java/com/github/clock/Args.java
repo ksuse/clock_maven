@@ -1,26 +1,26 @@
 package com.github.clock;
 
-import java.io.PrintWriter;
-import java.util.Arrays;
-import java.util.TimeZone;
+import java.time.ZoneId;
 
-import org.kohsuke.args4j.CmdLineParser;
-import org.kohsuke.args4j.Option;
+import picocli.CommandLine;
+import picocli.CommandLine.Command;
+import picocli.CommandLine.Option;
 
+@Command(name="clock", versionProvider=VersionProvider.class, description="Sample project for analog clock")
 public class Args {
-    @Option(name="-tz", aliases="--timezone", usage="Specifies time zone.  Default is local time.", metaVar="<TIMEZONE>")
+    @Option(names= {"-t", "--timezone"}, description="Specifies time zone.  Default is local time.", paramLabel="TIMEZONE")
     private String timeZone;
 
-    @Option(name="-h", aliases="--help", usage="print this message.")
+    @Option(names={ "-h", "--help"}, description="print this message.")
     private boolean showHelp = false;
 
-    @Option(name="-hh", aliases="--more-help", usage="print detail help message.")
+    @Option(names={ "-H", "--more-help"}, description="print detail help message.")
     private boolean showMoreHelp = false;
 
-    @Option(name="-v", aliases="--version", usage="show version and quit.")
+    @Option(names = {"-v", "--version"}, description="show version and quit.")
     private boolean showVersion = false;
 
-    @Option(name="-d", aliases="--debug", usage="debug mode.")
+    @Option(names={"-d", "--debug"}, description="debug mode.")
     private boolean debugMode = false;
 
     public boolean isRunningMode(){
@@ -39,21 +39,19 @@ public class Args {
         return debugMode;
     }
 
-    public TimeZone getTimeZone(){
-        TimeZone tz = null;
-        if(timeZone != null){
-            tz = TimeZone.getTimeZone(timeZone);
-        }
-        return tz;
+    public ZoneId getZoneId(){
+        ZoneId id = ZoneId.systemDefault();
+        if(timeZone != null)
+            id = ZoneId.of(timeZone);
+        return id;
     }
 
-    public void showHelp(CmdLineParser parser){
-        PrintWriter out = new PrintWriter(System.out);
-        out.printf("java -jar clock.jar [OPTIONS]%n%n");
-        parser.printUsage(out, null);
-
+    public void showHelp(CommandLine commandline){
+        commandline.usage(System.out);
         if(showMoreHelp){
-            System.out.println(Arrays.toString(TimeZone.getAvailableIDs()));
+            System.out.println("Available TimeZones");
+            ZoneId.getAvailableZoneIds().stream()
+                .forEach(id -> System.out.printf("\t%s%n", id));
         }
     }
 }

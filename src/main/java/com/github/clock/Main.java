@@ -1,32 +1,30 @@
 package com.github.clock;
 
-import org.kohsuke.args4j.CmdLineException;
-import org.kohsuke.args4j.CmdLineParser;
-
 import com.github.clock.swing.ClockViewer;
+import picocli.CommandLine;
 
 public class Main{
-    public Main(String[] arguments) throws CmdLineException{
+    public Main(String[] arguments) {
         Args args = parseOptions(arguments);
 
         if(args.isRunningMode()){
-            Clock clock = new Clock(args.getTimeZone());
+            Clock clock = new Clock(args.getZoneId());
             ClockViewer viewer = new ClockViewer(clock);
             viewer.setDebugMode(args.isDebugMode());
             viewer.showClock();
         }
     }
 
-    private Args parseOptions(String[] arguments) throws CmdLineException{
+    private Args parseOptions(String[] arguments) {
         Args args = new Args();
-        CmdLineParser parser = new CmdLineParser(args);
-        parser.parseArgument(arguments);
+        CommandLine commandline = new CommandLine(args);
+        commandline.parseArgs(arguments);
 
         if(args.isShowVersion()){
-            System.out.printf("Simple Analog Clock version %s%n", "1.0");
+            commandline.printVersionHelp(System.out);
         }
         if(args.isShowHelp()){
-            args.showHelp(parser);
+            args.showHelp(commandline);
         }
         return args;
     }

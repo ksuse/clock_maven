@@ -1,9 +1,9 @@
 package com.github.clock;
 
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.List;
-import java.util.TimeZone;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -19,33 +19,27 @@ public class Clock {
         public void run() {
             // Observers それぞれの呼び出しに時間がかからないよう
             // 別Threadの処理として実行する．
-            new Thread(){
-                public void run(){
-                    callUpdateObservers();
-                }
-            }.start();
+            new Thread(() -> callUpdateObservers())
+                .start();
         }
     };
-    private Calendar calendar;
+    private ZonedDateTime datetime;
+    private ZoneId zoneId;
 
     public Clock(){
-        this(TimeZone.getDefault());
+        this(ZoneId.systemDefault());
     }
 
-    public Clock(TimeZone timeZone){
-        if(timeZone != null){
-            calendar = Calendar.getInstance(timeZone);
-        }
-        else{
-            calendar = Calendar.getInstance();
-        }
+    public Clock(ZoneId id) {
+        this.zoneId = id;
+        datetime = ZonedDateTime.now(zoneId);
     }
 
     private void updateTime(){
-        calendar.setTimeInMillis(System.currentTimeMillis());
-        hour = calendar.get(Calendar.HOUR_OF_DAY);
-        minute = calendar.get(Calendar.MINUTE);
-        second = calendar.get(Calendar.SECOND);
+        datetime = ZonedDateTime.now(zoneId);
+        hour = datetime.getHour();
+        minute = datetime.getMinute();
+        second = datetime.getSecond();
     }
 
     private void callUpdateObservers(){
