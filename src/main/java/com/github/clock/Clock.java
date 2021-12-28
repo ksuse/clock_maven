@@ -8,7 +8,7 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 public class Clock {
-    private List<UpdateObserver> observers = new ArrayList<>();
+    private Observers observers;
     private boolean running = false;
     private int hour;
     private int minute;
@@ -26,12 +26,13 @@ public class Clock {
     private ZonedDateTime datetime;
     private ZoneId zoneId;
 
-    public Clock(){
-        this(ZoneId.systemDefault());
+    public Clock(Observers observers){
+        this(ZoneId.systemDefault(), observers);
     }
 
-    public Clock(ZoneId id) {
+    public Clock(ZoneId id, Observers observers) {
         this.zoneId = id;
+        this.observers = observers;
         datetime = ZonedDateTime.now(zoneId);
     }
 
@@ -45,9 +46,7 @@ public class Clock {
     private void callUpdateObservers(){
         synchronized(observers){
             updateTime();
-            for(UpdateObserver observer: observers){
-                observer.update(this);
-            }
+            observers.notify(this);
         }
     }
 
@@ -75,13 +74,5 @@ public class Clock {
     public void stop(){
         timer.cancel();
         running = false;
-    }
-
-    public void addUpdateObserver(UpdateObserver observer){
-        observers.add(observer);
-    }
-
-    public void removeUpdateObserver(UpdateObserver observer){
-        observers.remove(observer);
     }
 }

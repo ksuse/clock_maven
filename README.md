@@ -22,5 +22,7 @@ Sample project for analog clock
 `-t` オプションで時計のタイムゾーンを指定できます．
 利用可能なタイムゾーンは，`--more-help` オプション(`-H`)で閲覧できます．
 
+## 実行環境
 
+Java 11 以降．
 
