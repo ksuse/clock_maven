@@ -1,5 +1,6 @@
 package com.github.clock;
 
-public interface UpdateObserver {
+@FunctionalInterface
+public interface Observer {
     void update(Clock clock);
 }

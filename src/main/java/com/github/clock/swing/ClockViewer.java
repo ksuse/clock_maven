@@ -14,43 +14,44 @@ import java.awt.event.WindowEvent;
 import java.awt.geom.Line2D;
 import java.awt.geom.Point2D;
 import java.awt.image.BufferedImage;
+import java.util.stream.IntStream;
+import java.util.Optional;
 
 import javax.swing.JComponent;
 import javax.swing.JFrame;
 
 import com.github.clock.Clock;
-import com.github.clock.UpdateObserver;
+import com.github.clock.DebugPrinter;
+import com.github.clock.Observers;
 
 public class ClockViewer extends JComponent{
     private static final long serialVersionUID = 851223340594030326L;
 
     private Clock clock;
-    private Image background;
-    private boolean debugMode = false;
+    private Optional<Image> background;
+    private DebugPrinter printer;
+    private Hand[] hands;
 
-    public ClockViewer(Clock clock){
-        clock.addUpdateObserver(new UpdateObserver(){
-            @Override
-            public void update(Clock clock) {
-                repaint();
-            }
-        });
+    public ClockViewer(Clock clock, Observers observers, DebugPrinter printer){
+        observers.add(c -> repaint());
         this.clock = clock;
         clock.start();
         this.addComponentListener(new ComponentAdapter(){
             @Override
             public void componentResized(ComponentEvent e) {
-                background = null;
+                background = Optional.empty();
             }
         });
+        this.printer = printer;
+        initializeHands();
     }
 
-    public void setDebugMode(boolean debugMode){
-        this.debugMode = debugMode;
-    }
-
-    public boolean isDebugMode(){
-        return debugMode;
+    private void initializeHands() {
+        hands = new Hand[] {
+            new Hand(1, Color.BLACK, 0.8),
+            new Hand(2, Color.RED, 0.7),
+            new Hand(4, Color.BLUE, 0.6)
+        };
     }
 
     public void showClock(){
@@ -75,65 +76,60 @@ public class ClockViewer extends JComponent{
 
     @Override
     protected void paintComponent(Graphics g){
-        Graphics2D g2 = (Graphics2D)g;
-        if(background == null){
-            background = createBackgroundImage();
-        }
-        g2.drawImage(background, 0, 0, null);
-
-        drawHands(g2);
+        g.drawImage(background.orElseGet(() -> createBackgroundImage()), 0, 0, null);
+        drawHands((Graphics2D)g);
     }
 
     private double getLength(){
         Dimension size = getSize();
+        return Math.min(size.getHeight(), size.getWidth()) / 2;
+    }
 
-        double length = size.getWidth();
-        if(length > size.getHeight()){
-            length = size.getHeight();
-        }
+    private int[] calculateLocations(Clock clock) {
+        int hour = clock.getHour();
+        int minute = clock.getMinute();
+        int second = clock.getSecond();
+        // 長針の位置は，分の位置で表そうとすると，時間×5．
+        // 24時間制のため，12で割った余りを時間とする．
+        int hourPosition = (hour % 12) * 5 + minute / 12;
 
-        return length / 2;
+        printer.println(() -> 
+                String.format("%02d:%02d:%02d -> (%02d, %02d, %02d)",
+                    hour, minute, second, hourPosition, minute, second));
+        return new int[] { clock.getSecond(), clock.getMinute(), hourPosition };
     }
 
     private void drawHands(Graphics2D g2){
         Dimension size = getSize();
-
-        double length = getLength();
-        Point2D center = new Point2D.Double(size.getWidth() / 2, size.getHeight() / 2);
-
-        int hour = clock.getHour();
-        int minute = clock.getMinute();
-        int second = clock.getSecond();
-        int hourPosition = (hour % 12) * 5 + minute / 12;
-
-        if(isDebugMode()){
-            System.out.printf(
-                "%02d:%02d:%02d -> (%02d, %02d, %02d)%n",
-                hour, minute, second, hourPosition, minute, second
-            );
-        }
-
+        Point2D center = new Point2D.Double(size.getWidth() / 2.0, size.getHeight() / 2);
         g2.translate(center.getX(), center.getY());
-        drawHand(g2, clock.getSecond(), length * 0.8);
-
-        g2.setStroke(new BasicStroke(2));
-        g2.setColor(Color.RED);
-        drawHand(g2, clock.getMinute(), length * 0.7);
-        // 長針の位置は，分の位置で表そうとすると，時間×5．
-        // 24時間制のため，12で割った余りを時間とする．
-        g2.setStroke(new BasicStroke(4));
-        g2.setColor(Color.BLUE);
-        drawHand(g2, hourPosition, length * 0.6);
+        double length = getLength();
+        int[] locations = calculateLocations(clock);
+        IntStream.range(0, 3)
+            .forEach(index -> hands[index].draw(g2, locations[index], length));
     }
 
-    private void drawHand(Graphics2D g2, int dest, double length){
-        // 1分あたり，60度/360度 = PI/30.
-        // 12の位置が - PI / 2.
-        double angle = -Math.PI / 2 + (dest * (Math.PI / 30));
-        double x = length * Math.cos(angle);
-        double y = length * Math.sin(angle);
+    private class Hand {
+        private int stroke;
+        private Color color;
+        private double magnification;
 
-        g2.draw(new Line2D.Double(0, 0, x, y));
+        public Hand(int stroke, Color color, double lengthMagnification) {
+            this.stroke = stroke;
+            this.color = color;
+            this.magnification = lengthMagnification;
+        }
+
+        public void draw(Graphics2D g, int position, double length) {
+            g.setStroke(new BasicStroke(stroke));
+            g.setColor(color);
+            // 1分あたり，60度/360度 = PI/30.
+            // 12の位置が - PI / 2.
+            double angle = -Math.PI / 2 + (position * (Math.PI / 30));
+            double x = length * magnification * Math.cos(angle);
+            double y = length * magnification * Math.sin(angle);
+            g.draw(new Line2D.Double(0, 0, x, y));
+        }
     }
 
     private Image createBackgroundImage(){
@@ -141,24 +137,23 @@ public class ClockViewer extends JComponent{
         Image image = new BufferedImage(size.width, size.height, BufferedImage.TYPE_INT_ARGB);
 
         Graphics2D g = (Graphics2D)image.getGraphics();
-        double length = getLength();
-        length = length * 0.9;
+        final double length = getLength() * 0.9;
         Point2D center = new Point2D.Double(size.getWidth() / 2, size.getHeight() / 2);
 
-        double angle = - Math.PI / 3;
+        final double angle = - Math.PI / 3;
         g.translate(center.getX(), center.getY());
         g.setColor(Color.BLACK);
-        for(int i = 1; i <= 12; i++){
-            double x = length * Math.cos(angle);
-            double y = length * Math.sin(angle);
-
-            angle = angle + Math.PI / 6;
-            g.drawString("" + i, (int)x, (int)y);
-        }
-        if(isDebugMode()){
-            System.out.printf("create new background image: %s%n", size);
-        }
+        IntStream.range(0, 12)
+            .forEach(index -> drawNumber(g, String.valueOf(index + 1), length, angle + (index * Math.PI / 6)));
+        printer.println(() -> String.format("create new background image: %s%n", size));
+        this.background = Optional.of(image);
 
         return image;
+    }
+
+    private void drawNumber(Graphics2D g, String label, double length, double angle) {
+        double x = length * Math.cos(angle);
+        double y = length * Math.sin(angle);
+        g.drawString(label, (int)x, (int)y);
     }
 }

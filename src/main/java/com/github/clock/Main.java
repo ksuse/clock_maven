@@ -6,13 +6,15 @@ import picocli.CommandLine;
 public class Main{
     public Main(String[] arguments) {
         Args args = parseOptions(arguments);
+        if(args.isRunningMode())
+            showClock(args);
+    }
 
-        if(args.isRunningMode()){
-            Clock clock = new Clock(args.getZoneId());
-            ClockViewer viewer = new ClockViewer(clock);
-            viewer.setDebugMode(args.isDebugMode());
-            viewer.showClock();
-        }
+    private void showClock(Args args) {
+        Observers observers = new Observers();
+        Clock clock = new Clock(args.getZoneId(), observers);
+        ClockViewer viewer = new ClockViewer(clock, observers, DebugPrinter.of(args.isDebugMode()));
+        viewer.showClock();
     }
 
     private Args parseOptions(String[] arguments) {
@@ -20,12 +22,10 @@ public class Main{
         CommandLine commandline = new CommandLine(args);
         commandline.parseArgs(arguments);
 
-        if(args.isShowVersion()){
+        if(args.isShowVersion())
             commandline.printVersionHelp(System.out);
-        }
-        if(args.isShowHelp()){
+        if(args.isShowHelp())
             args.showHelp(commandline);
-        }
         return args;
     }
 
